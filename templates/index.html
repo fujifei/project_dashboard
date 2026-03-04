@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Dashboard</title>
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface-hover: #22263a;
+            --border: #2a2e3e;
+            --text: #e4e6ef;
+            --text-secondary: #8b8fa3;
+            --accent: #6366f1;
+            --accent-hover: #818cf8;
+            --green: #22c55e;
+            --green-bg: rgba(34,197,94,.12);
+            --yellow: #eab308;
+            --yellow-bg: rgba(234,179,8,.12);
+            --red: #ef4444;
+            --red-bg: rgba(239,68,68,.12);
+            --blue: #3b82f6;
+            --blue-bg: rgba(59,130,246,.12);
+            --radius: 12px;
+            --shadow: 0 4px 24px rgba(0,0,0,.3);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border);
+            background: var(--surface);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -.5px;
+        }
+        .header h1 span { color: var(--accent); }
+        .header-actions { display: flex; gap: 12px; align-items: center; }
+
+        /* Buttons */
+        .btn {
+            padding: 8px 18px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .15s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+        .btn-primary:hover { background: var(--accent-hover); }
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .btn-ghost:hover { background: var(--surface-hover); color: var(--text); }
+        .btn-danger { background: var(--red-bg); color: var(--red); }
+        .btn-danger:hover { background: var(--red); color: #fff; }
+        .btn-sm { padding: 5px 12px; font-size: 12px; }
+
+        /* Search & Filter bar */
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            padding: 16px 32px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            max-width: 400px;
+            position: relative;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 9px 14px 9px 36px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            transition: border-color .15s;
+        }
+        .search-box input:focus { border-color: var(--accent); }
+        .search-box svg {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+        }
+        .filter-chips {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .chip {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            transition: all .15s;
+        }
+        .chip:hover { border-color: var(--accent); color: var(--text); }
+        .chip.active {
+            background: var(--accent);
+            color: #fff;
+            border-color: var(--accent);
+        }
+
+        /* View toggle */
+        .view-toggle {
+            display: flex;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .view-toggle button {
+            padding: 7px 14px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .view-toggle button.active {
+            background: var(--accent);
+            color: #fff;
+        }
+        .view-toggle button:not(:last-child) {
+            border-right: 1px solid var(--border);
+        }
+
+        /* Stats bar */
+        .stats {
+            display: flex;
+            gap: 16px;
+            padding: 0 32px 12px;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .stat-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        /* Kanban View */
+        .kanban {
+            display: flex;
+            gap: 20px;
+            padding: 8px 32px 32px;
+            overflow-x: auto;
+            min-height: calc(100vh - 200px);
+        }
+        .kanban-column {
+            flex: 0 0 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .column-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: var(--surface);
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+        }
+        .column-header h3 {
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .column-count {
+            font-size: 12px;
+            background: var(--border);
+            padding: 1px 8px;
+            border-radius: 10px;
+            color: var(--text-secondary);
+        }
+
+        /* Grid View */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 16px;
+            padding: 8px 32px 32px;
+        }
+
+        /* Project Card */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px;
+            cursor: pointer;
+            transition: all .2s;
+            position: relative;
+        }
+        .card:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        .card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .card-name {
+            font-size: 15px;
+            font-weight: 600;
+            word-break: break-word;
+        }
+        .card-status {
+            font-size: 11px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .status-running { background: var(--green-bg); color: var(--green); }
+        .status-stopped { background: var(--red-bg); color: var(--red); }
+        .status-paused  { background: var(--yellow-bg); color: var(--yellow); }
+        .card-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .card-access-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: var(--accent);
+            text-decoration: none;
+            padding: 3px 10px;
+            border-radius: 6px;
+            background: rgba(99,102,241,.1);
+            transition: all .15s;
+            margin-bottom: 10px;
+        }
+        .card-access-link:hover { background: rgba(99,102,241,.22); text-decoration: none; }
+        .card-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .card-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow: hidden;
+        }
+        .card-meta-row svg { flex-shrink: 0; }
+        .card-meta-row span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .card-meta-row a {
+            color: var(--blue);
+            text-decoration: none;
+        }
+        .card-meta-row a:hover { text-decoration: underline; }
+        .card-tags {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .tag {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: var(--blue-bg);
+            color: var(--blue);
+        }
+        .port-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .port-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .port-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
+        .port-dot.inactive { background: var(--red); }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 60px;
+            overflow-y: auto;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            width: 520px;
+            max-width: 95vw;
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.5);
+            animation: slideIn .2s;
+            margin-bottom: 40px;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .modal h2 {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 9px 12px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            outline: none;
+            font-family: inherit;
+            transition: border-color .15s;
+        }
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            border-color: var(--accent);
+        }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 24px;
+        }
+        .form-actions .btn-danger {
+            margin-right: auto;
+        }
+
+        /* Category label colors */
+        .cat-label {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .cat-opensource { background: rgba(99,102,241,.15); color: #818cf8; }
+        .cat-self-developed { background: rgba(34,197,94,.15); color: #4ade80; }
+        .cat-tool { background: rgba(234,179,8,.15); color: #facc15; }
+        .cat-learning { background: rgba(236,72,153,.15); color: #f472b6; }
+        .cat-other { background: rgba(139,143,163,.15); color: #8b8fa3; }
+
+        /* Empty state */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 80px 32px;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        .empty-state svg { margin-bottom: 16px; opacity: .4; }
+        .empty-state p { font-size: 15px; margin-bottom: 16px; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .toast {
+            padding: 12px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            box-shadow: var(--shadow);
+            animation: slideIn .2s;
+        }
+        .toast.success { border-left: 3px solid var(--green); }
+        .toast.error   { border-left: 3px solid var(--red); }
+
+        /* Discovery Modal */
+        .discover-list {
+            max-height: 55vh;
+            overflow-y: auto;
+            margin: 16px 0;
+        }
+        .discover-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            transition: all .15s;
+        }
+        .discover-item:hover { border-color: var(--accent); }
+        .discover-item.tracked {
+            opacity: .45;
+        }
+        .discover-item input[type="checkbox"] {
+            margin-top: 3px;
+            accent-color: var(--accent);
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+        .discover-info { flex: 1; min-width: 0; }
+        .discover-name {
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .discover-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .discover-meta span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .source-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .source-process { background: rgba(59,130,246,.15); color: #60a5fa; }
+        .source-docker  { background: rgba(6,182,212,.15); color: #22d3ee; }
+        .tracked-badge {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: var(--yellow-bg);
+            color: var(--yellow);
+            font-weight: 600;
+        }
+        .discover-toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .discover-toolbar label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .discover-count {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .scanning-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin .6s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .scan-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        /* Tag Picker */
+        .tag-picker {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .tag-pick {
+            padding: 4px 12px;
+            border-radius: 14px;
+            font-size: 12px;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            transition: all .15s;
+        }
+        .tag-pick:hover { border-color: var(--blue); color: var(--text); }
+        .tag-pick.selected {
+            background: var(--blue-bg);
+            color: var(--blue);
+            border-color: var(--blue);
+        }
+        .tag-custom-input {
+            border: 1px dashed var(--border);
+            background: transparent;
+            color: var(--text);
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-size: 12px;
+            outline: none;
+            width: 100px;
+            font-family: inherit;
+        }
+        .tag-custom-input:focus { border-color: var(--accent); }
+        .tag-custom-input::placeholder { color: var(--text-secondary); opacity: .6; }
+
+        /* Pending notification */
+        .pending-btn {
+            position: relative;
+            padding: 8px 14px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all .15s;
+        }
+        .pending-btn:hover { background: var(--surface-hover); color: var(--text); }
+        .pending-btn.has-items { border-color: var(--yellow); color: var(--yellow); }
+        .badge {
+            position: absolute;
+            top: -6px; right: -6px;
+            min-width: 18px; height: 18px;
+            padding: 0 5px;
+            border-radius: 9px;
+            background: var(--red);
+            color: #fff;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .badge:empty { display: none; }
+        .pending-panel {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            right: 0;
+            width: 420px;
+            max-height: 480px;
+            overflow-y: auto;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: 0 12px 40px rgba(0,0,0,.5);
+            z-index: 200;
+            padding: 16px;
+        }
+        .pending-panel.open { display: block; animation: slideIn .15s; }
+        .pending-panel h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .pending-card {
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 8px;
+            transition: border-color .15s;
+        }
+        .pending-card:hover { border-color: var(--accent); }
+        .pending-card-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .pending-card-name {
+            font-weight: 600;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .pending-card-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            margin-bottom: 8px;
+        }
+        .pending-card-meta span {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .pending-card-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .pending-empty {
+            font-size: 13px;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 20px 0;
+        }
+        .pending-wrapper { position: relative; }
+
+        .btn-scan {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+        }
+        .btn-scan:hover {
+            background: linear-gradient(135deg, #818cf8, #a78bfa);
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1><span>&#9670;</span> Project Dashboard</h1>
+    <div class="header-actions">
+        <div class="pending-wrapper">
+            <button class="pending-btn" id="pendingBtn" onclick="togglePendingPanel()">
+                <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+                <span id="pendingLabel">Pending</span>
+                <span class="badge" id="pendingBadge"></span>
+            </button>
+            <div class="pending-panel" id="pendingPanel"></div>
+        </div>
+        <button class="btn btn-scan" onclick="openDiscoverModal()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0"/><path d="M12 2a10 10 0 0 1 4 19.5"/><circle cx="12" cy="12" r="2"/></svg>
+            Scan
+        </button>
+        <button class="btn btn-primary" onclick="openCreateModal()">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+            Add Project
+        </button>
+    </div>
+</div>
+
+<div class="toolbar">
+    <div class="search-box">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="Search projects..." oninput="renderProjects()">
+    </div>
+    <div class="filter-chips" id="categoryFilters"></div>
+    <div style="flex:1"></div>
+    <div class="view-toggle">
+        <button id="viewKanban" class="active" onclick="setView('kanban')">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><rect x="1" y="1" width="4" height="14" rx="1"/><rect x="6" y="1" width="4" height="9" rx="1"/><rect x="11" y="1" width="4" height="12" rx="1"/></svg>
+            Kanban
+        </button>
+        <button id="viewGrid" onclick="setView('grid')">
+            <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+            Grid
+        </button>
+    </div>
+</div>
+
+<div class="stats" id="statsBar"></div>
+<div id="projectContainer"></div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOnBackdrop(event)">
+    <div class="modal">
+        <h2 id="modalTitle">Add Project</h2>
+        <input type="hidden" id="editId">
+        <div class="form-group">
+            <label>Project Name *</label>
+            <input type="text" id="fName" placeholder="e.g. n8n">
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="fDesc" rows="2" placeholder="What does this project do?"></textarea>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>GitHub URL</label>
+                <input type="text" id="fGithub" placeholder="https://github.com/user/repo">
+            </div>
+            <div class="form-group">
+                <label>Access URL</label>
+                <input type="text" id="fAccessUrl" placeholder="http://localhost:8080">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Local Path</label>
+            <input type="text" id="fPath" placeholder="/Users/me/projects/repo">
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Category</label>
+                <select id="fCategory" onchange="onCategoryChange()"></select>
+                <input type="text" id="fCategoryCustom" placeholder="Enter custom category" style="display:none;margin-top:6px" onkeydown="if(event.key==='Enter')event.preventDefault()">
+            </div>
+            <div class="form-group">
+                <label>Status</label>
+                <select id="fStatus">
+                    <option value="running">Running</option>
+                    <option value="stopped">Stopped</option>
+                    <option value="paused">Paused</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Port</label>
+                <input type="text" id="fPort" placeholder="e.g. 8080">
+            </div>
+            <div class="form-group">
+                <label>Start Command</label>
+                <input type="text" id="fCommand" placeholder="e.g. docker-compose up -d">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Tags</label>
+            <div class="tag-picker" id="tagPicker"></div>
+        </div>
+        <div class="form-group">
+            <label>Notes</label>
+            <textarea id="fNotes" placeholder="Any additional notes..."></textarea>
+        </div>
+        <div class="form-actions">
+            <button class="btn btn-danger btn-sm" id="deleteBtn" style="display:none" onclick="deleteProject()">Delete</button>
+            <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="saveProject()">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Discovery Modal -->
+<div class="modal-overlay" id="discoverOverlay" onclick="closeDiscoverOnBackdrop(event)">
+    <div class="modal" style="width:600px">
+        <h2>
+            <svg width="20" height="20" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24" style="vertical-align:middle;margin-right:6px"><path d="M2 12a10 10 0 1 0 20 0 10 10 0 0 0-20 0"/><path d="M12 2a10 10 0 0 1 4 19.5"/><circle cx="12" cy="12" r="2"/></svg>
+            Discovered Services
+        </h2>
+        <p style="font-size:13px;color:var(--text-secondary);margin:-12px 0 16px">
+            Auto-scanned listening ports &amp; Docker containers on this machine.
+        </p>
+        <div id="discoverContent">
+            <div style="text-align:center;padding:40px"><span class="scanning-spinner"></span><br><br>Scanning...</div>
+        </div>
+        <div class="form-actions" id="discoverActions" style="display:none">
+            <span class="discover-count" id="discoverSelectedCount">0 selected</span>
+            <button class="btn btn-ghost" onclick="closeDiscoverModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="importSelected()">Import Selected</button>
+        </div>
+    </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+    let projects = [];
+    let currentView = 'kanban';
+    let activeCategory = 'all';
+    let presetTags = [];
+    let selectedTags = new Set();
+    let allCategories = [];
+
+    const DEFAULT_CATEGORIES = ['opensource', 'self-developed', 'tool', 'learning'];
+    const CAT_LABELS = {
+        'opensource': 'Open Source',
+        'self-developed': 'Self Developed',
+        'tool': 'Tool',
+        'learning': 'Learning',
+    };
+
+    async function fetchProjects() {
+        const res = await fetch('/api/projects');
+        projects = await res.json();
+        buildCategoryList();
+        renderCategoryFilters();
+        renderStats();
+        renderProjects();
+    }
+
+    function buildCategoryList() {
+        const cats = new Set(DEFAULT_CATEGORIES);
+        projects.forEach(p => { if (p.category) cats.add(p.category); });
+        allCategories = [...cats].sort();
+    }
+
+    async function fetchCategories() {
+        try {
+            const res = await fetch('/api/categories');
+            const cats = await res.json();
+            allCategories = cats;
+        } catch (e) {
+            buildCategoryList();
+        }
+    }
+
+    async function fetchPresetTags() {
+        try {
+            const res = await fetch('/api/tags');
+            presetTags = await res.json();
+        } catch (e) {
+            presetTags = [];
+        }
+    }
+
+    function renderCategoryFilters() {
+        const container = document.getElementById('categoryFilters');
+        let html = `<button class="chip ${activeCategory === 'all' ? 'active' : ''}" data-cat="all">All</button>`;
+        allCategories.forEach(c => {
+            html += `<button class="chip ${activeCategory === c ? 'active' : ''}" data-cat="${esc(c)}">${esc(CAT_LABELS[c] || c)}</button>`;
+        });
+        container.innerHTML = html;
+        container.querySelectorAll('.chip').forEach(btn => {
+            btn.addEventListener('click', () => filterCategory(btn.dataset.cat));
+        });
+    }
+
+    function renderStats() {
+        const running = projects.filter(p => p.status === 'running').length;
+        const stopped = projects.filter(p => p.status === 'stopped').length;
+        const paused  = projects.filter(p => p.status === 'paused').length;
+        document.getElementById('statsBar').innerHTML = `
+            <div class="stat-item"><div class="stat-dot" style="background:var(--text-secondary)"></div>${projects.length} Total</div>
+            <div class="stat-item"><div class="stat-dot" style="background:var(--green)"></div>${running} Running</div>
+            <div class="stat-item"><div class="stat-dot" style="background:var(--red)"></div>${stopped} Stopped</div>
+            <div class="stat-item"><div class="stat-dot" style="background:var(--yellow)"></div>${paused} Paused</div>
+        `;
+    }
+
+    function getFilteredProjects() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        return projects.filter(p => {
+            const matchCat = activeCategory === 'all' || p.category === activeCategory;
+            const matchSearch = !q ||
+                p.name.toLowerCase().includes(q) ||
+                p.description.toLowerCase().includes(q) ||
+                (p.tags || []).some(t => t.toLowerCase().includes(q)) ||
+                p.local_path.toLowerCase().includes(q);
+            return matchCat && matchSearch;
+        });
+    }
+
+    function renderProjects() {
+        const filtered = getFilteredProjects();
+        const container = document.getElementById('projectContainer');
+
+        if (filtered.length === 0 && projects.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <svg width="64" height="64" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                    </svg>
+                    <p>No projects yet. Click "Add Project" to get started.</p>
+                </div>`;
+            return;
+        }
+
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <p>No projects match your search.</p>
+                </div>`;
+            return;
+        }
+
+        if (currentView === 'kanban') {
+            renderKanban(filtered, container);
+        } else {
+            renderGrid(filtered, container);
+        }
+    }
+
+    function renderKanban(filtered, container) {
+        const columns = {
+            running: filtered.filter(p => p.status === 'running'),
+            stopped: filtered.filter(p => p.status === 'stopped'),
+            paused:  filtered.filter(p => p.status === 'paused'),
+        };
+        const titles = { running: 'Running', stopped: 'Stopped', paused: 'Paused' };
+        const colors = { running: 'var(--green)', stopped: 'var(--red)', paused: 'var(--yellow)' };
+
+        let html = '<div class="kanban">';
+        for (const [status, items] of Object.entries(columns)) {
+            html += `
+                <div class="kanban-column">
+                    <div class="column-header">
+                        <h3><span style="color:${colors[status]}">&#9679;</span> ${titles[status]}</h3>
+                        <span class="column-count">${items.length}</span>
+                    </div>
+                    ${items.map(p => cardHTML(p)).join('')}
+                </div>`;
+        }
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    function renderGrid(filtered, container) {
+        container.innerHTML = `<div class="grid">${filtered.map(p => cardHTML(p)).join('')}</div>`;
+    }
+
+    function cardHTML(p) {
+        const catClass = 'cat-' + (p.category || 'other').replace(/[^a-z-]/g, '');
+        const portDot = p.port
+            ? `<span class="port-indicator"><span class="port-dot ${p.port_active ? 'active' : 'inactive'}"></span>:${p.port}</span>`
+            : '';
+
+        const accessUrl = p.access_url || (p.port ? `http://localhost:${p.port}` : '');
+
+        return `
+            <div class="card" onclick="openEditModal(${p.id})">
+                <div class="card-top">
+                    <span class="card-name">${esc(p.name)}</span>
+                    <span class="card-status status-${p.status}">${p.status}</span>
+                </div>
+                ${p.description ? `<div class="card-desc">${esc(p.description)}</div>` : ''}
+                ${accessUrl ? `<a class="card-access-link" href="${esc(accessUrl)}" target="_blank" onclick="event.stopPropagation()">
+                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    ${esc(accessUrl)}
+                </a>` : ''}
+                <div class="card-meta">
+                    ${p.category ? `<div class="card-meta-row"><span class="cat-label ${catClass}">${esc(CAT_LABELS[p.category] || p.category)}</span></div>` : ''}
+                    ${p.github_url ? `<div class="card-meta-row">
+                        <svg width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                        <span><a href="${esc(p.github_url)}" target="_blank" onclick="event.stopPropagation()">${esc(p.github_url.replace('https://github.com/', ''))}</a></span>
+                    </div>` : ''}
+                    ${p.local_path ? `<div class="card-meta-row">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                        <span>${esc(p.local_path)}</span>
+                    </div>` : ''}
+                    ${p.port ? `<div class="card-meta-row">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/></svg>
+                        ${portDot}
+                    </div>` : ''}
+                    ${p.start_command ? `<div class="card-meta-row">
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+                        <span style="font-family:monospace;font-size:11px">${esc(p.start_command)}</span>
+                    </div>` : ''}
+                </div>
+                ${(p.tags && p.tags.length) ? `<div class="card-tags">${p.tags.map(t => `<span class="tag">${esc(t)}</span>`).join('')}</div>` : ''}
+            </div>`;
+    }
+
+    function esc(s) {
+        if (!s) return '';
+        const d = document.createElement('div');
+        d.textContent = s;
+        return d.innerHTML;
+    }
+
+    /* View switching */
+    function setView(v) {
+        currentView = v;
+        document.getElementById('viewKanban').classList.toggle('active', v === 'kanban');
+        document.getElementById('viewGrid').classList.toggle('active', v === 'grid');
+        renderProjects();
+    }
+
+    function filterCategory(cat) {
+        activeCategory = cat;
+        renderCategoryFilters();
+        renderProjects();
+    }
+
+    /* Modal */
+    function populateCategorySelect(currentVal) {
+        const sel = document.getElementById('fCategory');
+        const customInput = document.getElementById('fCategoryCustom');
+        let opts = allCategories.map(c =>
+            `<option value="${esc(c)}">${esc(CAT_LABELS[c] || c)}</option>`
+        ).join('');
+        opts += '<option value="__custom__">+ Custom...</option>';
+        sel.innerHTML = opts;
+
+        if (currentVal && !allCategories.includes(currentVal)) {
+            sel.insertAdjacentHTML('beforeend',
+                `<option value="${esc(currentVal)}" selected>${esc(currentVal)}</option>`);
+            sel.value = currentVal;
+        } else {
+            sel.value = currentVal || 'opensource';
+        }
+        customInput.style.display = 'none';
+        customInput.value = '';
+    }
+
+    function onCategoryChange() {
+        const sel = document.getElementById('fCategory');
+        const customInput = document.getElementById('fCategoryCustom');
+        if (sel.value === '__custom__') {
+            customInput.style.display = 'block';
+            customInput.focus();
+        } else {
+            customInput.style.display = 'none';
+        }
+    }
+
+    function getSelectedCategory() {
+        const sel = document.getElementById('fCategory');
+        if (sel.value === '__custom__') {
+            const custom = document.getElementById('fCategoryCustom').value.trim().toLowerCase().replace(/\s+/g, '-');
+            return custom || 'opensource';
+        }
+        return sel.value;
+    }
+
+    function openCreateModal() {
+        document.getElementById('modalTitle').textContent = 'Add Project';
+        document.getElementById('editId').value = '';
+        document.getElementById('deleteBtn').style.display = 'none';
+        clearForm();
+        populateCategorySelect('opensource');
+        renderTagPicker();
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function openEditModal(id) {
+        const p = projects.find(x => x.id === id);
+        if (!p) return;
+        document.getElementById('modalTitle').textContent = 'Edit Project';
+        document.getElementById('editId').value = p.id;
+        document.getElementById('deleteBtn').style.display = 'inline-flex';
+        document.getElementById('fName').value = p.name;
+        document.getElementById('fGithub').value = p.github_url || '';
+        document.getElementById('fAccessUrl').value = p.access_url || '';
+        document.getElementById('fDesc').value = p.description || '';
+        document.getElementById('fPath').value = p.local_path || '';
+        document.getElementById('fStatus').value = p.status || 'stopped';
+        document.getElementById('fPort').value = p.port || '';
+        document.getElementById('fCommand').value = p.start_command || '';
+        document.getElementById('fNotes').value = p.notes || '';
+        selectedTags = new Set(p.tags || []);
+        populateCategorySelect(p.category || 'opensource');
+        renderTagPicker();
+        document.getElementById('modalOverlay').classList.add('active');
+    }
+
+    function closeModal() {
+        document.getElementById('modalOverlay').classList.remove('active');
+    }
+
+    function closeModalOnBackdrop(e) {
+        if (e.target === e.currentTarget) closeModal();
+    }
+
+    function clearForm() {
+        ['fName','fGithub','fAccessUrl','fDesc','fPath','fPort','fCommand','fNotes'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('fStatus').value = 'stopped';
+        document.getElementById('fCategoryCustom').style.display = 'none';
+        document.getElementById('fCategoryCustom').value = '';
+        selectedTags = new Set();
+    }
+
+    function renderTagPicker() {
+        const container = document.getElementById('tagPicker');
+        const allTags = [...new Set([...presetTags, ...selectedTags])];
+        let html = allTags.map(t =>
+            `<button type="button" class="tag-pick ${selectedTags.has(t) ? 'selected' : ''}" onclick="toggleTag('${esc(t)}')">${esc(t)}</button>`
+        ).join('');
+        html += `<input class="tag-custom-input" id="customTagInput" placeholder="+ custom" onkeydown="addCustomTag(event)">`;
+        container.innerHTML = html;
+    }
+
+    function toggleTag(tag) {
+        if (selectedTags.has(tag)) {
+            selectedTags.delete(tag);
+        } else {
+            selectedTags.add(tag);
+        }
+        renderTagPicker();
+    }
+
+    function addCustomTag(e) {
+        if (e.key !== 'Enter') return;
+        e.preventDefault();
+        const input = document.getElementById('customTagInput');
+        const val = input.value.trim().toLowerCase();
+        if (val && !selectedTags.has(val)) {
+            selectedTags.add(val);
+            renderTagPicker();
+        }
+        input.value = '';
+    }
+
+    async function saveProject() {
+        const name = document.getElementById('fName').value.trim();
+        if (!name) { toast('Project name is required', 'error'); return; }
+
+        const data = {
+            name,
+            github_url: document.getElementById('fGithub').value.trim(),
+            access_url: document.getElementById('fAccessUrl').value.trim(),
+            description: document.getElementById('fDesc').value.trim(),
+            local_path: document.getElementById('fPath').value.trim(),
+            category: getSelectedCategory(),
+            status: document.getElementById('fStatus').value,
+            port: document.getElementById('fPort').value.trim(),
+            start_command: document.getElementById('fCommand').value.trim(),
+            tags: [...selectedTags],
+            notes: document.getElementById('fNotes').value.trim(),
+        };
+
+        const editId = document.getElementById('editId').value;
+        const url = editId ? `/api/projects/${editId}` : '/api/projects';
+        const method = editId ? 'PUT' : 'POST';
+
+        await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+
+        closeModal();
+        toast(editId ? 'Project updated' : 'Project created', 'success');
+        fetchProjects();
+        fetchCategories();
+        fetchPresetTags();
+    }
+
+    async function deleteProject() {
+        const editId = document.getElementById('editId').value;
+        if (!editId) return;
+        if (!confirm('Delete this project?')) return;
+        await fetch(`/api/projects/${editId}`, { method: 'DELETE' });
+        closeModal();
+        toast('Project deleted', 'success');
+        fetchProjects();
+    }
+
+    function toast(msg, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const el = document.createElement('div');
+        el.className = `toast ${type}`;
+        el.textContent = msg;
+        container.appendChild(el);
+        setTimeout(() => el.remove(), 3000);
+    }
+
+    /* ========== Pending Services ========== */
+    let pendingServices = [];
+    let pendingPanelOpen = false;
+
+    async function fetchPending() {
+        try {
+            const res = await fetch('/api/pending');
+            pendingServices = await res.json();
+        } catch (e) {
+            pendingServices = [];
+        }
+        renderPendingBadge();
+        if (pendingPanelOpen) renderPendingPanel();
+    }
+
+    function renderPendingBadge() {
+        const count = pendingServices.length;
+        const badge = document.getElementById('pendingBadge');
+        const btn = document.getElementById('pendingBtn');
+        badge.textContent = count > 0 ? count : '';
+        btn.classList.toggle('has-items', count > 0);
+    }
+
+    function togglePendingPanel() {
+        pendingPanelOpen = !pendingPanelOpen;
+        const panel = document.getElementById('pendingPanel');
+        panel.classList.toggle('open', pendingPanelOpen);
+        if (pendingPanelOpen) renderPendingPanel();
+    }
+
+    function renderPendingPanel() {
+        const panel = document.getElementById('pendingPanel');
+        if (pendingServices.length === 0) {
+            panel.innerHTML = `
+                <h3>Pending Services</h3>
+                <div class="pending-empty">No new services discovered.<br>Background scan runs every 2 minutes.</div>`;
+            return;
+        }
+
+        let html = `<h3>
+            Pending Services (${pendingServices.length})
+            <button class="btn btn-primary btn-sm" onclick="importAllPending()">Import All</button>
+        </h3>`;
+
+        pendingServices.forEach(svc => {
+            const isDocker = svc.source === 'docker';
+            const ago = timeAgo(svc.first_seen);
+            html += `
+                <div class="pending-card">
+                    <div class="pending-card-top">
+                        <span class="pending-card-name">
+                            ${esc(svc.name)}
+                            <span class="source-badge ${isDocker ? 'source-docker' : 'source-process'}">${isDocker ? 'Docker' : 'Process'}</span>
+                        </span>
+                        <span style="font-size:11px;color:var(--text-secondary)">${ago}</span>
+                    </div>
+                    <div class="pending-card-meta">
+                        <span>Port: <strong>${esc(svc.port)}</strong></span>
+                        ${svc.local_path ? `<span>Path: ${esc(svc.local_path)}</span>` : ''}
+                        ${svc.command ? `<span style="font-family:monospace;font-size:10px;opacity:.7">${esc(truncate(svc.command, 60))}</span>` : ''}
+                    </div>
+                    <div class="pending-card-actions">
+                        <button class="btn btn-primary btn-sm" onclick="importPending(${svc.id})">Add to Board</button>
+                        <button class="btn btn-ghost btn-sm" onclick="dismissPending(${svc.id})">Dismiss</button>
+                    </div>
+                </div>`;
+        });
+        panel.innerHTML = html;
+    }
+
+    function timeAgo(isoStr) {
+        const diff = Date.now() - new Date(isoStr).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return 'just now';
+        if (mins < 60) return mins + 'm ago';
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return hrs + 'h ago';
+        return Math.floor(hrs / 24) + 'd ago';
+    }
+
+    async function importPending(id) {
+        await fetch(`/api/pending/${id}/import`, { method: 'POST' });
+        toast('Service added to board', 'success');
+        fetchPending();
+        fetchProjects();
+    }
+
+    async function dismissPending(id) {
+        await fetch(`/api/pending/${id}/dismiss`, { method: 'POST' });
+        fetchPending();
+    }
+
+    async function importAllPending() {
+        const res = await fetch('/api/pending/import-all', { method: 'POST' });
+        const data = await res.json();
+        toast(`Imported ${data.imported} service(s)`, 'success');
+        fetchPending();
+        fetchProjects();
+    }
+
+    document.addEventListener('click', e => {
+        const wrapper = document.querySelector('.pending-wrapper');
+        if (pendingPanelOpen && !wrapper.contains(e.target)) {
+            pendingPanelOpen = false;
+            document.getElementById('pendingPanel').classList.remove('open');
+        }
+    });
+
+    setInterval(fetchPending, 30000);
+
+    /* ========== Service Discovery ========== */
+    let discoveredServices = [];
+
+    async function openDiscoverModal() {
+        document.getElementById('discoverOverlay').classList.add('active');
+        document.getElementById('discoverActions').style.display = 'none';
+        document.getElementById('discoverContent').innerHTML =
+            '<div style="text-align:center;padding:40px"><span class="scanning-spinner"></span><br><br>Scanning local services...</div>';
+        try {
+            const res = await fetch('/api/discover');
+            discoveredServices = await res.json();
+            renderDiscoveredServices();
+        } catch (e) {
+            document.getElementById('discoverContent').innerHTML =
+                '<div class="scan-empty">Scan failed. Please try again.</div>';
+        }
+    }
+
+    function renderDiscoveredServices() {
+        const container = document.getElementById('discoverContent');
+        if (discoveredServices.length === 0) {
+            container.innerHTML = '<div class="scan-empty">No running services detected on this machine.</div>';
+            document.getElementById('discoverActions').style.display = 'none';
+            return;
+        }
+
+        const newCount = discoveredServices.filter(s => !s.already_tracked).length;
+
+        let html = `<div class="discover-toolbar">
+            <label><input type="checkbox" id="selectAllDiscover" onchange="toggleSelectAll(this)"> Select all new (${newCount})</label>
+        </div><div class="discover-list">`;
+
+        discoveredServices.forEach((svc, i) => {
+            const isDocker = svc.source === 'docker';
+            const tracked = svc.already_tracked;
+            html += `
+                <div class="discover-item ${tracked ? 'tracked' : ''}">
+                    <input type="checkbox" id="dsvc_${i}" data-index="${i}"
+                        ${tracked ? 'disabled' : ''}
+                        onchange="updateSelectedCount()">
+                    <div class="discover-info">
+                        <div class="discover-name">
+                            ${esc(svc.name)}
+                            <span class="source-badge ${isDocker ? 'source-docker' : 'source-process'}">${isDocker ? 'Docker' : 'Process'}</span>
+                            ${tracked ? '<span class="tracked-badge">Already Tracked</span>' : ''}
+                        </div>
+                        <div class="discover-meta">
+                            <span>Port: <strong>${esc(svc.port)}</strong>${svc.pid ? ' &middot; PID: ' + esc(svc.pid) : ''}${svc.image ? ' &middot; Image: ' + esc(svc.image) : ''}</span>
+                            ${svc.local_path ? '<span>Path: ' + esc(svc.local_path) + '</span>' : ''}
+                            ${svc.github_url ? '<span>GitHub: <a href="' + esc(svc.github_url) + '" target="_blank" onclick="event.stopPropagation()" style="color:var(--blue)">' + esc(svc.github_url.replace('https://github.com/', '')) + '</a></span>' : ''}
+                            ${svc.command ? '<span style="font-family:monospace;font-size:11px;opacity:.7">' + esc(truncate(svc.command, 80)) + '</span>' : ''}
+                        </div>
+                    </div>
+                </div>`;
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
+        document.getElementById('discoverActions').style.display = 'flex';
+        updateSelectedCount();
+    }
+
+    function truncate(s, max) {
+        return s.length > max ? s.substring(0, max) + '...' : s;
+    }
+
+    function toggleSelectAll(el) {
+        const checked = el.checked;
+        discoveredServices.forEach((svc, i) => {
+            const cb = document.getElementById(`dsvc_${i}`);
+            if (cb && !cb.disabled) cb.checked = checked;
+        });
+        updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+        let count = 0;
+        discoveredServices.forEach((_, i) => {
+            const cb = document.getElementById(`dsvc_${i}`);
+            if (cb && cb.checked) count++;
+        });
+        document.getElementById('discoverSelectedCount').textContent = `${count} selected`;
+    }
+
+    async function importSelected() {
+        const toImport = [];
+        discoveredServices.forEach((svc, i) => {
+            const cb = document.getElementById(`dsvc_${i}`);
+            if (cb && cb.checked) {
+                toImport.push({
+                    name: svc.name,
+                    port: svc.port,
+                    local_path: svc.local_path || '',
+                    github_url: svc.github_url || '',
+                    command: svc.command || '',
+                    source: svc.source,
+                });
+            }
+        });
+
+        if (toImport.length === 0) {
+            toast('Please select at least one service', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch('/api/discover/import', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(toImport),
+            });
+            const data = await res.json();
+            closeDiscoverModal();
+            toast(`Imported ${data.imported} service(s)`, 'success');
+            fetchProjects();
+        } catch (e) {
+            toast('Import failed', 'error');
+        }
+    }
+
+    function closeDiscoverModal() {
+        document.getElementById('discoverOverlay').classList.remove('active');
+    }
+
+    function closeDiscoverOnBackdrop(e) {
+        if (e.target === e.currentTarget) closeDiscoverModal();
+    }
+
+    /* Keyboard shortcut */
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeModal(); closeDiscoverModal(); }
+        if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+            e.preventDefault();
+            document.getElementById('searchInput').focus();
+        }
+    });
+
+    fetchProjects();
+    fetchCategories();
+    fetchPresetTags();
+    fetchPending();
+</script>
+
+</body>
+</html>
